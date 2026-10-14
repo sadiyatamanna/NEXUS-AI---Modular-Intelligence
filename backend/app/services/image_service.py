@@ -21,21 +21,25 @@ class ImageService:
         seed = uuid.uuid4().hex[:8]
         cdn_url = f"https://image.pollinations.ai/prompt/{encoded}?seed={seed}"
 
-        # Ensure upload directory exists
-        os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+        # On serverless (Vercel/Lambda), return the direct CDN URL immediately to avoid request timeouts
+        if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+            logger.info(f"Serving direct AI image CDN URL for prompt: '{clean_prompt[:50]}'")
+            return cdn_url
+
+        # Ensure upload directory exists for local persistence
+        upload_dir = settings.effective_upload_dir
+        os.makedirs(upload_dir, exist_ok=True)
         filename = f"gen_{uuid.uuid4().hex[:12]}.jpg"
-        file_path = os.path.join(settings.UPLOAD_DIR, filename)
+        file_path = os.path.join(upload_dir, filename)
 
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.get(cdn_url)
                 if resp.status_code == 200 and len(resp.content) > 1000:
                     with open(file_path, "wb") as f:
                         f.write(resp.content)
                     logger.info(f"Generated and cached AI image: {filename} for prompt: '{clean_prompt[:50]}'")
                     return f"/api/uploads/{filename}"
-                else:
-                    logger.warning(f"Image generation upstream returned status {resp.status_code}")
         except Exception as e:
             logger.warning(f"Could not cache image locally ({e}). Using direct CDN URL.")
 

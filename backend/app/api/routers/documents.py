@@ -47,8 +47,10 @@ async def upload_document(
         )
 
     # Secure unique file path
+    upload_dir = settings.effective_upload_dir
+    os.makedirs(upload_dir, exist_ok=True)
     save_filename = f"{current_user.id}_{os.urandom(8).hex()}_{filename}"
-    file_path = os.path.join(settings.UPLOAD_DIR, save_filename)
+    file_path = os.path.join(upload_dir, save_filename)
 
     file_size = 0
     with open(file_path, "wb") as buffer:
