@@ -17,12 +17,18 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
     
-    # Database Configuration
-    # Defaults to local SQLite file if PostgreSQL is not provided, allowing zero-friction setup and rock-solid local tests
     DATABASE_URL: str = Field(
         default=f"sqlite:///{os.path.join('/tmp' if os.environ.get('VERCEL') else '.', 'nexus.db')}",
         description="PostgreSQL connection string (e.g. postgresql://user:pass@localhost:5432/nexus) or SQLite fallback"
     )
+    
+    @property
+    def effective_database_url(self) -> str:
+        """Enforces writable /tmp directory for SQLite on serverless hosts (Vercel / Lambda)."""
+        url = self.DATABASE_URL
+        if (os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME")) and url.startswith("sqlite"):
+            return "sqlite:////tmp/nexus.db"
+        return url
     
     # AI Providers & Integrations
     NEXUS_API_BASE_URL: str = Field(
@@ -40,9 +46,23 @@ class Settings(BaseSettings):
     
     # Storage & Uploads
     UPLOAD_DIR: str = Field(
-        default="/tmp/uploads" if os.environ.get("VERCEL") else os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "uploads")
+        default="/tmp/uploads" if (os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME")) else os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "uploads")
     )
     MAX_UPLOAD_SIZE_BYTES: int = 25 * 1024 * 1024  # 25 MB
+    
+    @property
+    def effective_upload_dir(self) -> str:
+        """Always guarantees a valid, writable uploads directory across local and serverless hosts."""
+        if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+            target = "/tmp/uploads"
+        else:
+            target = self.UPLOAD_DIR
+        try:
+            os.makedirs(target, exist_ok=True)
+        except Exception:
+            target = "/tmp/uploads"
+            os.makedirs(target, exist_ok=True)
+        return target
     
     # CORS
     CORS_ORIGINS: List[str] = ["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173", "*"]

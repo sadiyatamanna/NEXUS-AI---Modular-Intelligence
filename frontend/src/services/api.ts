@@ -61,8 +61,19 @@ export const api = {
       body: JSON.stringify(payload),
     });
     if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || 'Failed to complete message');
+      let detailMsg = `Server error HTTP ${res.status}`;
+      try {
+        const err = await res.json();
+        detailMsg = err.detail || detailMsg;
+      } catch {
+        try {
+          const rawText = await res.text();
+          if (rawText && rawText.length < 250) {
+            detailMsg = rawText;
+          }
+        } catch {}
+      }
+      throw new Error(detailMsg);
     }
     return res.json();
   },

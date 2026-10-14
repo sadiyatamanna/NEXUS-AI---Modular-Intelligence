@@ -3,11 +3,10 @@
   "services": {
     "backend": {
       "root": "backend",
-      "framework": "fastapi"
+      "entrypoint": "main:app"
     },
     "frontend": {
-      "root": "frontend",
-      "framework": "vite"
+      "root": "frontend"
     }
   },
   "rewrites": [

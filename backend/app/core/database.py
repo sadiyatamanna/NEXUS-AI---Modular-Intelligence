@@ -6,9 +6,11 @@ from app.core.config import settings
 
 logger = logging.getLogger("nexus.database")
 
+db_url = settings.effective_database_url
+
 # Normalize SQLite database URL if needed for connect_args
 connect_args = {}
-if settings.DATABASE_URL.startswith("sqlite"):
+if db_url.startswith("sqlite"):
     connect_args = {"check_same_thread": False}
 
 # Engine configuration with connection pooling
@@ -17,7 +19,7 @@ engine_kwargs = {
     "pool_pre_ping": True,
 }
 
-if not settings.DATABASE_URL.startswith("sqlite"):
+if not db_url.startswith("sqlite"):
     engine_kwargs.update({
         "pool_size": 10,
         "max_overflow": 20,
@@ -25,7 +27,7 @@ if not settings.DATABASE_URL.startswith("sqlite"):
     })
 
 engine = create_engine(
-    settings.DATABASE_URL,
+    db_url,
     connect_args=connect_args,
     **engine_kwargs
 )

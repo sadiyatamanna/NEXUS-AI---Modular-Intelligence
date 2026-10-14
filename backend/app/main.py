@@ -19,10 +19,18 @@ logger = logging.getLogger("nexus.main")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Ensure database schema is initialized
+    # Startup: Ensure database schema is initialized safely
     logger.info("Initializing NEXUS AI database schema...")
-    init_db()
-    os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+    try:
+        init_db()
+    except Exception as e:
+        logger.error(f"Database initialization warning: {e}")
+        
+    try:
+        os.makedirs(settings.effective_upload_dir, exist_ok=True)
+    except Exception as e:
+        logger.warning(f"Upload directory setup: {e}")
+        
     try:
         from app.services.rag_service import vector_store
         vector_store.sync_from_db()
@@ -39,7 +47,7 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS Middleware (Supports local dev, ports, and all Netlify deployments)
+# CORS Middleware (Supports local dev, ports, and all Netlify/Vercel deployments)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
@@ -66,8 +74,8 @@ if os.path.isdir(os.path.join(FRONTEND_DIST, "assets")):
     app.mount("/assets", StaticFiles(directory=os.path.join(FRONTEND_DIST, "assets")), name="frontend-assets")
 
 # Static file serving for uploads & generated visual assets
-os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
-app.mount(f"{settings.API_V1_PREFIX}/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
+upload_dir = settings.effective_upload_dir
+app.mount(f"{settings.API_V1_PREFIX}/uploads", StaticFiles(directory=upload_dir), name="uploads")
 
 # Include API Routers
 app.include_router(health.router, prefix=settings.API_V1_PREFIX)
