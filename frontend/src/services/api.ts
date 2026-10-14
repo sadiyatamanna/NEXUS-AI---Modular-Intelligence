@@ -69,36 +69,80 @@ export const api = {
 
   // Documents & RAG
   async getDocuments(): Promise<DocumentItem[]> {
-    const res = await fetch(`${API_BASE}/documents`);
-    if (!res.ok) return [];
-    return res.json();
+    try {
+      const res = await fetch(`${API_BASE}/documents`);
+      if (!res.ok) return [];
+      return res.json();
+    } catch {
+      return [];
+    }
   },
 
   async uploadDocument(file: File): Promise<DocumentItem> {
-    const formData = new FormData();
-    formData.append('file', file);
-    const res = await fetch(`${API_BASE}/documents/upload`, {
-      method: 'POST',
-      body: formData,
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || 'Document upload failed');
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch(`${API_BASE}/documents/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      if (!res.ok) {
+        let errorDetail = '';
+        try {
+          const err = await res.json();
+          errorDetail = err.detail;
+        } catch {
+          errorDetail = `Server error HTTP ${res.status}`;
+        }
+        throw new Error(errorDetail || 'Document upload failed');
+      }
+      return res.json();
+    } catch (err: any) {
+      if (err.name === 'TypeError' || err.message === 'Failed to fetch' || err.message?.includes('NetworkError')) {
+        throw new Error(
+          'Backend server is offline or unreachable (Failed to fetch). ' +
+          'Please ensure the platform backend is running (run "python start_nexus.py" or double-click "run.bat"). ' +
+          'If deployed on Netlify, configure VITE_API_BASE_URL to point to your live backend.'
+        );
+      }
+      throw err;
     }
-    return res.json();
   },
 
   async deleteDocument(id: string): Promise<void> {
-    await fetch(`${API_BASE}/documents/${id}`, { method: 'DELETE' });
+    try {
+      await fetch(`${API_BASE}/documents/${id}`, { method: 'DELETE' });
+    } catch (e) {
+      console.error('Delete document failed:', e);
+    }
   },
 
   async queryRag(query: string, modelId?: string) {
-    const res = await fetch(`${API_BASE}/rag/query`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query, model_id: modelId }),
-    });
-    return res.json();
+    try {
+      const res = await fetch(`${API_BASE}/rag/query`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, model_id: modelId }),
+      });
+      if (!res.ok) {
+        let errorDetail = '';
+        try {
+          const err = await res.json();
+          errorDetail = err.detail;
+        } catch {
+          errorDetail = `Query failed HTTP ${res.status}`;
+        }
+        throw new Error(errorDetail || 'RAG query failed');
+      }
+      return res.json();
+    } catch (err: any) {
+      if (err.name === 'TypeError' || err.message === 'Failed to fetch') {
+        throw new Error(
+          'Backend server is offline or unreachable. Please start the backend with "python start_nexus.py" or "run.bat".'
+        );
+      }
+      throw err;
+    }
   },
 
   // Agents

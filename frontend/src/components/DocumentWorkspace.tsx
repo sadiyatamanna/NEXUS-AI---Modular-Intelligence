@@ -13,12 +13,15 @@ export const DocumentWorkspace: React.FC = () => {
   const [ragResult, setRagResult] = useState<{ answer: string; citations: any[] } | null>(null);
   const [isQuerying, setIsQuerying] = useState(false);
 
+  const [backendOnline, setBackendOnline] = useState<boolean | null>(null);
+
   const loadDocuments = async () => {
     try {
       const docs = await api.getDocuments();
       setDocuments(docs);
-    } catch (e) {
-      console.error(e);
+      setBackendOnline(true);
+    } catch {
+      setBackendOnline(false);
     }
   };
 
@@ -27,6 +30,9 @@ export const DocumentWorkspace: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    api.getHealth()
+      .then(() => setBackendOnline(true))
+      .catch(() => setBackendOnline(false));
     loadDocuments();
   }, []);
 
@@ -110,6 +116,28 @@ export const DocumentWorkspace: React.FC = () => {
           Secure document ingestion pipeline with semantic text chunking, vector indexing, and grounded retrieval.
         </p>
       </div>
+
+      {backendOnline === false && (
+        <div style={{
+          background: 'rgba(239, 68, 68, 0.12)',
+          border: '1px solid rgba(239, 68, 68, 0.3)',
+          borderRadius: 8,
+          padding: '12px 16px',
+          marginBottom: 16,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          fontSize: '0.86rem',
+          color: '#fca5a5'
+        }}>
+          <AlertTriangle size={20} color="#ef4444" style={{ flexShrink: 0 }} />
+          <div>
+            <strong>Backend API is currently offline:</strong> Cannot connect to backend server. 
+            To upload files and query the Knowledge Base, please start the backend with <code style={{ color: '#fff', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: 4 }}>python start_nexus.py</code> or double-click <code style={{ color: '#fff', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: 4 }}>run.bat</code>. 
+            (If hosted on Netlify, configure <code style={{ color: '#fff', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: 4 }}>VITE_API_BASE_URL</code> in Netlify Environment Variables to point to your deployed backend).
+          </div>
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16 }}>
         {/* Upload Card */}

@@ -26,7 +26,7 @@ def is_python_functional(py_path):
 def check_backend_dependencies(py_path):
     try:
         res = subprocess.run(
-            [py_path, "-c", "import fastapi, uvicorn, sqlalchemy; sys.exit(0)"],
+            [py_path, "-c", "import sys, fastapi, uvicorn, sqlalchemy; sys.exit(0)"],
             capture_output=True,
             timeout=5
         )
@@ -151,11 +151,10 @@ def start():
         else:
             print("      [!] Note: To enable live frontend development, please install Node.js from https://nodejs.org")
 
-    # Step 3: Launch Services
     print("\n[3/3] Starting Services...")
     print("      Launching Backend API on http://127.0.0.1:8000 ...")
     backend_proc = subprocess.Popen(
-        [python_exe, "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8000", "--reload"],
+        [python_exe, "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"],
         cwd=backend_dir
     )
 
