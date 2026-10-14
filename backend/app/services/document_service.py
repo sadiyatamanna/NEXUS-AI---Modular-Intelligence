@@ -15,9 +15,12 @@ class DocumentParser:
 
         if ext == ".pdf" or "pdf" in mime_type:
             try:
-                reader = PdfReader(file_path)
+                reader = PdfReader(file_path, strict=False)
                 for idx, page in enumerate(reader.pages):
-                    text = page.extract_text() or ""
+                    try:
+                        text = page.extract_text() or ""
+                    except Exception:
+                        text = ""
                     clean_text = DocumentParser._clean_text(text)
                     if clean_text:
                         pages.append((idx + 1, clean_text))
@@ -27,7 +30,20 @@ class DocumentParser:
         elif ext == ".docx" or "word" in mime_type or "officedocument" in mime_type:
             try:
                 doc = DocxDocument(file_path)
-                full_text = "\n".join([p.text for p in doc.paragraphs if p.text.strip()])
+                text_parts = []
+                # 1. Extract paragraphs
+                for p in doc.paragraphs:
+                    p_txt = p.text.strip()
+                    if p_txt:
+                        text_parts.append(p_txt)
+                # 2. Extract tables (vital for structured reports & review forms)
+                for table in doc.tables:
+                    for row in table.rows:
+                        row_cells = [cell.text.strip() for cell in row.cells if cell.text.strip()]
+                        if row_cells:
+                            text_parts.append(" | ".join(row_cells))
+                
+                full_text = "\n\n".join(text_parts)
                 clean_text = DocumentParser._clean_text(full_text)
                 if clean_text:
                     pages.append((1, clean_text))
@@ -45,7 +61,7 @@ class DocumentParser:
                         "Visual document indexed into knowledge base."
                     )
                     pages.append((1, desc))
-            except Exception as e:
+            except Exception:
                 pages.append((1, f"Image document: {os.path.basename(file_path)}"))
 
         else:
@@ -58,10 +74,6 @@ class DocumentParser:
                         pages.append((1, clean_text))
             except Exception as e:
                 raise ValueError(f"Failed to read file: {e}")
-
-        if not pages:
-            # Default empty placeholder if file contains purely empty or scanned content without OCR
-            pages.append((1, "[Document parsed - No selectable text extracted. OCR may be required.]"))
 
         return pages
 

@@ -23,6 +23,11 @@ async def lifespan(app: FastAPI):
     logger.info("Initializing NEXUS AI database schema...")
     init_db()
     os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+    try:
+        from app.services.rag_service import vector_store
+        vector_store.sync_from_db()
+    except Exception as e:
+        logger.warning(f"Could not pre-load vector store: {e}")
     logger.info("NEXUS AI backend initialized successfully.")
     yield
     logger.info("Shutting down NEXUS AI backend.")

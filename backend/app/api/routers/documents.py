@@ -79,6 +79,14 @@ async def upload_document(
 
     try:
         pages = DocumentParser.extract_text(file_path, doc.mime_type)
+        if not pages:
+            doc.status = "empty"
+            doc.chunk_count = 0
+            doc.error_message = "No readable text found in document. Please upload a file containing selectable text."
+            db.commit()
+            db.refresh(doc)
+            return doc
+
         total_chunks = 0
         for page_num, page_text in pages:
             chunks = DocumentParser.chunk_text(page_text)

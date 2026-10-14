@@ -5,7 +5,7 @@ from app.core.database import get_db
 from app.models import User
 from app.schemas import RAGQueryRequest, RAGQueryResponse, Citation
 from app.api.deps import get_current_user
-from app.services.rag_service import vector_store
+from app.services.rag_service import vector_store, extract_relevant_snippet
 from app.providers.registry import provider_registry
 
 router = APIRouter(prefix="/rag", tags=["Retrieval-Augmented Generation"])
@@ -37,12 +37,15 @@ async def query_rag(
             document_id=c["document_id"],
             document_title=c["document_title"],
             chunk_index=c["chunk_index"],
-            snippet=c["content"][:200] + "..." if len(c["content"]) > 200 else c["content"]
+            snippet=extract_relevant_snippet(c["content"], payload.query)
         )
         for c in matched_chunks
     ]
 
-    context_text = "\n\n".join([f"[{c.document_title} - Section {c.chunk_index}]:\n{c.snippet}" for c in citations])
+    context_text = "\n\n".join([
+        f"[{c['document_title']} - Section {c['chunk_index']}]:\n{c['content']}"
+        for c in matched_chunks
+    ])
     system_prompt = (
         "You are NEXUS AI Document Assistant. "
         "Answer the question strictly using the provided reference passages. "
