@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Testing & Cache
+.pytest_cache/
+.coverage
+htmlcov/
+test_nexus.db
+*.db
+nexus.db
+
+# Secrets & Environment variables
+.env
+*.env
+backend/.env
+
+# Node / Frontend
+node_modules/
+.npm
+frontend/dist/
+frontend/dist-ssr/
+*.local
+*.timestamp-*.mjs
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# Output zips
+nexus-ai-portable.zip
+*.zip
