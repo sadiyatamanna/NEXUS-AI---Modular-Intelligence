@@ -102,7 +102,7 @@ export const api = {
         throw new Error(
           'Backend server is offline or unreachable (Failed to fetch). ' +
           'Please ensure the platform backend is running (run "python start_nexus.py" or double-click "run.bat"). ' +
-          'If deployed on Netlify, configure VITE_API_BASE_URL to point to your live backend.'
+          'If deployed in the cloud, ensure the backend service is healthy.'
         );
       }
       throw err;

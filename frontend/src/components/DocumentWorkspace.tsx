@@ -133,8 +133,7 @@ export const DocumentWorkspace: React.FC = () => {
           <AlertTriangle size={20} color="#ef4444" style={{ flexShrink: 0 }} />
           <div>
             <strong>Backend API is currently offline:</strong> Cannot connect to backend server. 
-            To upload files and query the Knowledge Base, please start the backend with <code style={{ color: '#fff', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: 4 }}>python start_nexus.py</code> or double-click <code style={{ color: '#fff', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: 4 }}>run.bat</code>. 
-            (If hosted on Netlify, configure <code style={{ color: '#fff', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: 4 }}>VITE_API_BASE_URL</code> in Netlify Environment Variables to point to your deployed backend).
+            To upload files and query the Knowledge Base, please start the backend with <code style={{ color: '#fff', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: 4 }}>python start_nexus.py</code> or double-click <code style={{ color: '#fff', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: 4 }}>run.bat</code>.
           </div>
         </div>
       )}

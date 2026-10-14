@@ -61,3 +61,7 @@ $RECYCLE.BIN/
 # Output zips
 nexus-ai-portable.zip
 *.zip
+
+# Uploaded documents
+backend/uploads/*
+!backend/uploads/.gitkeep

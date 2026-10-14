@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     # Database Configuration
     # Defaults to local SQLite file if PostgreSQL is not provided, allowing zero-friction setup and rock-solid local tests
     DATABASE_URL: str = Field(
-        default="sqlite:///./nexus.db",
+        default=f"sqlite:///{os.path.join('/tmp' if os.environ.get('VERCEL') else '.', 'nexus.db')}",
         description="PostgreSQL connection string (e.g. postgresql://user:pass@localhost:5432/nexus) or SQLite fallback"
     )
     
@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     
     # Storage & Uploads
     UPLOAD_DIR: str = Field(
-        default=os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "uploads")
+        default="/tmp/uploads" if os.environ.get("VERCEL") else os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "uploads")
     )
     MAX_UPLOAD_SIZE_BYTES: int = 25 * 1024 * 1024  # 25 MB
     
